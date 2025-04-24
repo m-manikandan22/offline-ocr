@@ -5,7 +5,6 @@ import numpy as np
 import cv2
 import imutils
 from PIL import Image
-import joblib
 import os
 
 # ---------------------- Device Setup ---------------------- #
@@ -40,26 +39,28 @@ class CNNModel(nn.Module):
         )
 
     def forward(self, x):
-        # x shape: (batch, H, W, C)
         x = x.permute(0, 3, 1, 2)   # -> (batch, C, H, W)
         x = self.conv_layers(x)
         x = self.fc_layers(x)
         return x
 
-# ---------------------- Load Model & Encoder ---------------------- #
-@st.cache_resource
-def load_resources():
-    # model
-    model = CNNModel().to(device)
-    model.load_state_dict(
-        torch.load("handwritten_model.pth", map_location=device)
-    )
-    model.eval()
-    # label encoder
-    le = joblib.load("label_encoder.pkl")
-    return model, le
+# ---------------------- Classes List ---------------------- #
+classes = [
+    '0','1','2','3','4','5','6','7','8','9',
+    'A','B','C','D','E','F','G','H','I','J',
+    'K','L','M','N','P','Q','R','S','T','U',
+    'V','W','X','Y','Z'
+]
 
-model, le = load_resources()
+# ---------------------- Load Model ---------------------- #
+@st.cache_resource
+def load_model():
+    model = CNNModel().to(device)
+    model.load_state_dict(torch.load("handwritten_model.pth", map_location=device))
+    model.eval()
+    return model
+
+model = load_model()
 
 # ---------------------- Utility Functions ---------------------- #
 def sort_contours(cnts, method="left-to-right"):
@@ -115,7 +116,7 @@ def get_letters(image_path):
             with torch.no_grad():
                 preds = model(tensor)
                 idx = torch.argmax(preds, dim=1).item()
-            char = le.inverse_transform([idx])[0]
+            char = classes[idx]  # Direct mapping to character
             letters.append(char)
 
     return letters, image
