@@ -52,7 +52,7 @@ def load_resources():
     # model
     model = CNNModel().to(device)
     model.load_state_dict(
-        torch.load("model.pth", map_location=device)
+        torch.load("handwritten_model.pth", map_location=device)
     )
     model.eval()
     # label encoder
