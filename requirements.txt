@@ -1,3 +1,4 @@
+imutils
 torch
 torchvision
 streamlit
